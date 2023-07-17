@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ArUco Camera Calibration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        
+        table {
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        table td, table th {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script>
+        function updateMarkerTable() {
+            fetch('/marker_data')
+                .then(response => response.json())
+                .then(data => {
+                    const markerTable = document.getElementById('marker-table');
+                    markerTable.innerHTML = '';
+
+                    for (const marker of data.markers) {
+                        const row = document.createElement('tr');
+                        const idCell = document.createElement('td');
+                        const widthCell = document.createElement('td');
+                        const heightCell = document.createElement('td');
+
+                        idCell.textContent = marker.id;
+                        widthCell.textContent = marker.width;
+                        heightCell.textContent = marker.height;
+
+                        row.appendChild(idCell);
+                        row.appendChild(widthCell);
+                        row.appendChild(heightCell);
+                        markerTable.appendChild(row);
+                    }
+                });
+        }
+
+        setInterval(updateMarkerTable, 1000);
+    </script>
+</head>
+<body>
+    <h1>ArUco Camera Calibration</h1>
+    
+    <div class="container">
+        <table>
+            <tr>
+                <th>Marker ID</th>
+                <th>Width (mm)</th>
+                <th>Height (mm)</th>
+            </tr>
+            <tbody id="marker-table">
+                <!-- A markerek adatainak frissítése JavaScript segítségével -->
+            </tbody>
+        </table>
+    </div>
+    
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+</body>
+</html>
