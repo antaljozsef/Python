@@ -1,13 +1,10 @@
 import cv2
 from cv2 import aruco
-import time
 import math
 
 cap = cv2.VideoCapture(0)
 
 aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-
-last_print_time = time.time() - 3  # Az utolsó kiírás óta eltelt idő inicializálása
 
 m = -0.00027839979100551
 b = -0.32304623355505202
@@ -21,9 +18,7 @@ while True:
     )
     frame_markers = aruco.drawDetectedMarkers(frame, corners, ids)
 
-    current_time = time.time()  # Inicializáld a current_time változót
-
-    if ids is not None and current_time - last_print_time >= 3:
+    if ids is not None:
         for i in range(len(ids)):
             marker_id = ids[i][0]
             marker_x = corners[i][0][:, 0].mean()
@@ -47,10 +42,7 @@ while True:
             angle = math.degrees(math.atan2(tr_y - tl_y, tr_x - tl_x))
             radian = (angle) * (math.pi / 180)
             radian += math.pi
-            radian = math.fmod(radian, math.pi)
             print(f"{radian} radián")
-
-        last_print_time = current_time
 
     cv2.imshow("ArUco Detection", frame_markers)
 

@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # TARGET = [Base, Shoulder, Elbow, Wrist1, Wrist2, Wrist3]
 
     home_position = [0, -pi / 2, 0, -pi / 2, 0, 0]
-    rtde_c.moveJ(home_position, velocity, acceleration)
+    # rtde_c.moveJ(home_position, velocity, acceleration)
 
     # target1 = [0, -pi / 3, 0, -pi / 2, 0, 0]
     # rtde_c.moveJ(target1, velocity, acceleration)
@@ -42,9 +42,9 @@ if __name__ == "__main__":
     # target3 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 0]
     # rtde_c.moveJ(target3, velocity, acceleration)
 
-    # target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, pi]
+    target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, pi]
     # target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 3.99455]
-    # rtde_c.moveJ(target4, velocity, acceleration)
+    rtde_c.moveJ(target4, velocity, acceleration)
 
     p = rtde_r.getActualTCPPose()
     print(f"pose {p}")

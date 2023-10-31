@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "multiprocessing": "^1.2.0",
+    "numpy": "^0.0.1"
+  }
+}
