@@ -1,1 +1,1 @@
-radians
+Polinomiális illeszkedés

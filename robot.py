@@ -42,7 +42,8 @@ if __name__ == "__main__":
     # target3 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 0]
     # rtde_c.moveJ(target3, velocity, acceleration)
 
-    target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, pi]
+    target4 = [0, -pi / 2, pi / 2, -pi / 2, -pi / 2, pi]
+
     # target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 3.99455]
     rtde_c.moveJ(target4, velocity, acceleration)
 
@@ -50,9 +51,9 @@ if __name__ == "__main__":
     print(f"pose {p}")
     target5 = p
     # target5[0] -= 0.01  # x koordináta
-    target5[0] = -0.44756054008226637
+    # target5[0] = -0.44756054008226637
     # target5[1] -= 0.01  # y koordináta
-    target5[2] -= 0.1  # z koordináta
+    # target5[2] -= 0.13  # z koordináta
     # rtde_c.moveL(target5, velocity, acceleration)
 
     # target1 = [-0.015, -0.935, 0.85, -1.5, 4.75, 1.6]

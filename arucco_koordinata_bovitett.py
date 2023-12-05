@@ -7,7 +7,7 @@ cap = cv2.VideoCapture(0)
 
 aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
 
-last_print_time = time.time() - 3  # Az utolsó kiírás óta eltelt idő inicializálása
+last_print_time = time.time() - 3
 
 m = -0.00027839979100551
 b = -0.32304623355505202
@@ -21,7 +21,7 @@ while True:
     )
     frame_markers = aruco.drawDetectedMarkers(frame, corners, ids)
 
-    current_time = time.time()  # Inicializáld a current_time változót
+    current_time = time.time()
 
     if ids is not None and current_time - last_print_time >= 3:
         for i in range(len(ids)):
