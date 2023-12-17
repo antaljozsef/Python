@@ -59,8 +59,8 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
 
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
 
-    m = 0.0003018053033986
-    b = -0.4256262811303743
+    m = -0.0002382995890505
+    b = -0.3083860187200043
 
     while cameraEvent.is_set():
         ret, frame = cap.read()
@@ -101,7 +101,7 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
                 if 0 < radian < 1:
                     radian = math.pi / 2 + radian
 
-                if -2 < radian < -1:
+                if -2 < radian < 0:
                     radian = math.pi + radian
 
                 if radian > 1:
@@ -148,8 +148,8 @@ def move_robot_arm(cameraEvent, arucco_target_event, queue):
         # gripper
         rtde_ioo = rtde_io.RTDEIOInterface(host)
 
-        velocity = 0.1
-        acceleration = 0.1
+        velocity = 3
+        acceleration = 3
 
         # rtde_ioo.setStandardDigitalOut(0, False)
 
@@ -181,7 +181,9 @@ def move_robot_arm(cameraEvent, arucco_target_event, queue):
         print(f"x poyicio: {item[0]}")
         print(f"radian: {item[1]}")
 
-        target6[0] = item[0] - 0.015
+        start_time = time.time()
+
+        target6[0] = item[0]
         rtde_c.moveL(target6, velocity, acceleration)
 
         p = rtde_r.getActualQ()
@@ -193,8 +195,20 @@ def move_robot_arm(cameraEvent, arucco_target_event, queue):
         pz = rtde_r.getActualTCPPose()
         target7 = pz
 
-        target7[2] -= 0.13  # z koordináta
+        target7[2] -= 0.11  # z koordináta
         rtde_c.moveL(target7, velocity, acceleration)
+
+        # current_time = time.time()
+        # elapsed_time = current_time - start_time
+        # print(f"Robotkar mozgasi ideje: {elapsed_time}")
+
+        time.sleep(1.8)
+
+        pu = rtde_r.getActualTCPPose()
+        target8 = pu
+
+        target8[2] -= 0.02  # z koordináta
+        rtde_c.moveL(target8, velocity, acceleration)
 
         test = rtde_r.getActualTCPPose()
         print(f"Vegpont X pozicio teszt: {test[0]}")
@@ -223,7 +237,8 @@ if __name__ == "__main__":
     # Létrehozunk 3 folyamatot
     # todo: read from config file
     # if [config.get('USE_CONVEYOR']:
-    # process1 = multiprocessing.Process(target=control_motor)
+
+    process1 = multiprocessing.Process(target=control_motor)
 
     # todo: Processzek elnevezese
     process2 = multiprocessing.Process(
@@ -244,7 +259,7 @@ if __name__ == "__main__":
     )
 
     # Párhuzamos folyamatok indítása
-    # process1.start()
+    process1.start()
     process2.start()
     process3.start()
 

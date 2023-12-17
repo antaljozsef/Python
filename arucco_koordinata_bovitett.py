@@ -29,9 +29,9 @@ while True:
             marker_x = corners[i][0][:, 0].mean()
             marker_y = corners[i][0][:, 1].mean()
 
-            print(f"Marker {marker_id}: (x, y) = ({marker_x}, {marker_y})")
+            print(f"Marker {marker_id}: (x, y) = ({marker_y}, {marker_x})")
 
-            xPosition = marker_x * m + b
+            xPosition = marker_y * m + b
             print(f"X Position: {xPosition:.17f}")
 
             # Kiírja a marker 4 sarkának koordinátáit

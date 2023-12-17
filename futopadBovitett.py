@@ -1,5 +1,6 @@
 import subprocess
 import time
+import keyboard
 
 
 def ticcmd(*args):
@@ -9,23 +10,23 @@ def ticcmd(*args):
 # TIC motorvezérlő inicializálása
 ticcmd("--exit-safe-start")
 
-# Állítsuk be a velocity-t -40000000-re
 ticcmd("--velocity", "-40000000")
-
-# Kezdő időpont
-start_time = time.time()
 
 while True:
     # Motor bekapcsolása
     ticcmd("--energize")
 
-    # Idő ellenőrzése
-    current_time = time.time()
-    elapsed_time = current_time - start_time
+    # start_time = time.time()
 
-    # Ellenőrzés, hogy eltelt-e már 17 másodperc
-    if elapsed_time >= 17:
-        break
+    #     current_time = time.time()
+    #     elapsed_time = current_time - start_time
 
-# Motor kikapcsolása
-ticcmd("--deenergize")
+    #     if elapsed_time >= 1.8:
+
+    if keyboard.is_pressed("space"):
+        start_time = time.time()
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+
+        if elapsed_time < 1.8:
+            break

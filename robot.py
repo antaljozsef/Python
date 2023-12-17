@@ -15,7 +15,7 @@ rtde_c = rtde_control.RTDEControlInterface(host)
 # getPosition
 rtde_r = rtde_receive.RTDEReceiveInterface(host)
 # gripper
-rtde_io = rtde_io.RTDEIOInterface(host)
+# rtde_io = rtde_io.RTDEIOInterface(host)
 
 if __name__ == "__main__":
     # p[1] += 0.01         #x tengely fix (előre, hátra)
@@ -33,18 +33,7 @@ if __name__ == "__main__":
     home_position = [0, -pi / 2, 0, -pi / 2, 0, 0]
     # rtde_c.moveJ(home_position, velocity, acceleration)
 
-    # target1 = [0, -pi / 3, 0, -pi / 2, 0, 0]
-    # rtde_c.moveJ(target1, velocity, acceleration)
-
-    # target2 = [0, -pi / 3, pi / 3, -pi / 2, 0, 0]
-    # rtde_c.moveJ(target2, velocity, acceleration)
-
-    # target3 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 0]
-    # rtde_c.moveJ(target3, velocity, acceleration)
-
     target4 = [0, -pi / 2, pi / 2, -pi / 2, -pi / 2, pi]
-
-    # target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, 3.99455]
     rtde_c.moveJ(target4, velocity, acceleration)
 
     p = rtde_r.getActualTCPPose()
