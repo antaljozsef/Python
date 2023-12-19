@@ -12,14 +12,6 @@ import numpy as np
 import keyboard
 
 
-# todo: should move this to config
-# todo: X_DEFAULT_POSTION
-radian = 0.0
-xPosition = 0.0
-
-# todo: should move this to main
-queue = multiprocessing.Queue()
-
 # ---------- FÜGVÉNYEK
 
 
@@ -29,7 +21,7 @@ def control_motor():
         return subprocess.check_output(["ticcmd"] + list(args))
 
     try:
-        # TIC motorvezérlő inicializálása
+        # A motor elíndítása
         ticcmd("--exit-safe-start")
 
         # Állítsuk be a velocity-t -40000000-re
@@ -46,8 +38,9 @@ def control_motor():
     # ticcmd("--deenergize")
 
 
-# ArUco
+# ArUco Kamera
 def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
+    # Kamera inicializálása
     cap = cv2.VideoCapture(0)
 
     # Kamera inicializáció ellenőrzése
@@ -55,16 +48,21 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
         print("Kamera hiba")
         return
 
+    # Várakoztatjuk a Kamera process-t
     cameraEvent.wait()
 
+    # ArUco szótár létrehozása
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
 
-    m = -0.0002382995890505
+    # Egyenes egyenletéhez tartozó értékek
+    m = -0.0002382995890505  # Meredekség
     b = -0.3083860187200043
 
     while cameraEvent.is_set():
+        # Kamera képének beolvasása
         ret, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # ArUco marker detektálása
         parameters = aruco.DetectorParameters_create()
         corners, ids, rejectedImgPoints = aruco.detectMarkers(
             gray, aruco_dict, parameters=parameters
@@ -73,14 +71,16 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
 
         if ids is not None:
             for i in range(len(ids)):
+                # Marker azonosító és középpont koordináták kiszámítása
                 marker_id = ids[i][0]
                 marker_x = corners[i][0][:, 0].mean()
                 marker_y = corners[i][0][:, 1].mean()
 
+                # Kiírás a konzolra
                 print(f"Marker {marker_id}: (x, y) = ({marker_y}, {marker_x})")
 
+                # X koordináta számolása az egyenes egyenlete alapján
                 xPosition = marker_y * m + b
-                print(f"X Position: {xPosition:.17f}")
 
                 # Kiírja a marker 4 sarkának koordinátáit
                 # print(f"Marker {marker_id} sarkai:")
@@ -96,8 +96,8 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
                 radian = (angle) * (math.pi / 180)
                 # radian += math.pi
                 radian = math.fmod(radian, math.pi)
-                print(f"{radian} -----radián Arucco1")
 
+                # Az utolsó csuklohoz, hogy ne forduljon sokszor körbe
                 if 0 < radian < 1:
                     radian = math.pi / 2 + radian
 
@@ -110,25 +110,23 @@ def detect_and_display_aruco(cameraEvent, arucco_target_event, queue):
                 if radian < -2:
                     radian = 2 * math.pi + radian
 
-                print(f"{radian} -----radián Arucco2")
-
-                # TODO: check data struct from onther codebase: DetectionData
+                # X koordináta, és szög átadása
                 queue.put(np.array([xPosition, radian]))
 
-                # arucco_target_event.set()
+                # Robotkar process elindítása
                 arucco_target_event.set()
 
-                print("Benne van a queuban")
-                # exit()
-
-                # todo: if we need to stop: camere_event.clear()
+                # Kamera process leállítása
                 cameraEvent.clear()
 
+        # Kép megjelenítése
         cv2.imshow("ArUco Detection", frame_markers)
 
+        # Kilépési feltétel (q gomb megnyomása)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
+    # Kamera leállítása és ablakok bezárása
     cap.release()
     cv2.destroyAllWindows()
 
@@ -151,78 +149,63 @@ def move_robot_arm(cameraEvent, arucco_target_event, queue):
         velocity = 3
         acceleration = 3
 
-        # rtde_ioo.setStandardDigitalOut(0, False)
-
         home_position = [0, -pi / 2, 0, -pi / 2, 0, 0]
         # rtde_c.moveJ(home_position, velocity, acceleration)
 
-        # waypoints['HomePosition'] = ..
-        target4 = [0, -pi / 2, pi / 2, -pi / 2, -pi / 2, pi]
-        # target4 = [0, -pi / 3, pi / 3, -pi / 2, -pi / 2, radian]
-        rtde_c.moveJ(target4, velocity, acceleration)
+        waiting_position = [0, -pi / 2, pi / 2, -pi / 2, -pi / 2, pi]
+        rtde_c.moveJ(waiting_position, velocity, acceleration)
 
+        # Gripper kinyitása
+        rtde_ioo.setStandardDigitalOut(0, False)
+
+        # Kamera process elindítása
         cameraEvent.set()
 
-        # p = rtde_r.getActualTCPPose()
-
-        px = rtde_r.getActualTCPPose()
-        target6 = px
-
-        # arucco_target_event.wait()
-        # todo: check if queue is empty ==> wait for queue to have at least one item
+        p = rtde_r.getActualTCPPose()
+        x_axis_displacement = p
 
         if queue.empty():
             arucco_target_event.wait()
 
         item = queue.get()
-        # item = queue.value
-        # cameraEvent.clear()
 
-        print(f"x poyicio: {item[0]}")
-        print(f"radian: {item[1]}")
+        # start_time = time.time() -- robotkar mozgási idejének leméréséhez kellet
 
-        start_time = time.time()
-
-        target6[0] = item[0]
-        rtde_c.moveL(target6, velocity, acceleration)
+        x_axis_displacement[0] = item[0]
+        rtde_c.moveL(x_axis_displacement, velocity, acceleration)
 
         p = rtde_r.getActualQ()
-        target5 = p
+        final_joint_rotation = p
 
-        target5[5] = item[1]
-        rtde_c.moveJ(target5, velocity, acceleration)
+        final_joint_rotation[5] = item[1]
+        rtde_c.moveJ(final_joint_rotation, velocity, acceleration)
 
+        # A darab fölé mozgatás
         pz = rtde_r.getActualTCPPose()
-        target7 = pz
+        z_axis_displacement = pz
+        z_axis_displacement[2] -= 0.11  # z koordináta
+        rtde_c.moveL(z_axis_displacement, velocity, acceleration)
 
-        target7[2] -= 0.11  # z koordináta
-        rtde_c.moveL(target7, velocity, acceleration)
-
-        # current_time = time.time()
+        # current_time = time.time() -- robotkar mozgási idejének leméréséhez kellet
         # elapsed_time = current_time - start_time
         # print(f"Robotkar mozgasi ideje: {elapsed_time}")
 
+        # 1.8 másodpercet kell várjon a robot, amig a darab odaér a gripperhez
         time.sleep(1.8)
 
-        pu = rtde_r.getActualTCPPose()
-        target8 = pu
+        # Darab megfogása
+        p = rtde_r.getActualTCPPose()
+        gripping_item_position = p
+        gripping_item_position[2] -= 0.02  # z koordináta
+        rtde_c.moveL(gripping_item_position, velocity, acceleration)
 
-        target8[2] -= 0.02  # z koordináta
-        rtde_c.moveL(target8, velocity, acceleration)
-
-        test = rtde_r.getActualTCPPose()
-        print(f"Vegpont X pozicio teszt: {test[0]}")
-
+        # Gripper becsukása
         rtde_ioo.setStandardDigitalOut(0, True)
 
-        rtde_c.moveJ(target4, velocity, acceleration)
-
-        # rtde_io.setStandardDigitalOut(0, False)
-        # rtde_io.setStandardDigitalOut(0, True)
+        # Darab felemelése
+        rtde_c.moveL(x_axis_displacement, velocity, acceleration)
 
         # rtde_c.stopScript()
-
-        print("Robotkar program vége")
 
     except Exception as e:
         print("Robotkar hiba")
@@ -234,14 +217,13 @@ if __name__ == "__main__":
     cameraEvent = multiprocessing.Event()
     arucco_target_event = multiprocessing.Event()
 
+    # Queue Létrehozása
+    queue = multiprocessing.Queue()
+
     # Létrehozunk 3 folyamatot
-    # todo: read from config file
-    # if [config.get('USE_CONVEYOR']:
+    FutoszalagProcess = multiprocessing.Process(target=control_motor)
 
-    process1 = multiprocessing.Process(target=control_motor)
-
-    # todo: Processzek elnevezese
-    process2 = multiprocessing.Process(
+    KameraProcess = multiprocessing.Process(
         target=detect_and_display_aruco,
         args=(
             cameraEvent,
@@ -249,7 +231,7 @@ if __name__ == "__main__":
             queue,
         ),
     )
-    process3 = multiprocessing.Process(
+    RobotProcess = multiprocessing.Process(
         target=move_robot_arm,
         args=(
             cameraEvent,
@@ -259,14 +241,13 @@ if __name__ == "__main__":
     )
 
     # Párhuzamos folyamatok indítása
-    process1.start()
-    process2.start()
-    process3.start()
+    FutoszalagProcess.start()
+    KameraProcess.start()
+    RobotProcess.start()
 
     # Párhuzamos folyamatok befejezése
-    process2.join()
-    # cameraEvent.clear()
-
-    process3.join()
+    FutoszalagProcess.join()
+    KameraProcess.join()
+    RobotProcess.join()
 
     print("Fő folyamat befejezve")
